@@ -5,13 +5,13 @@ const ANKI_CONNECT_URL = 'http://localhost:8765';
 /**
  * Enviar request a AnkiConnect
  */
-async function invoke(action, params = {}) {
+async function invoke(action, params = {}, customTimeout = 30000) {
   const response = await axios.post(ANKI_CONNECT_URL, {
     action: action,
     version: 6,
     params: params
   }, {
-    timeout: 30000, // 30 segundos de timeout
+    timeout: customTimeout,
     maxContentLength: Infinity,
     maxBodyLength: Infinity
   });
@@ -50,10 +50,11 @@ async function createDeck(deckName) {
  * Guardar un archivo de medios en Anki
  */
 async function storeMediaFile(filename, data) {
+  // Usar timeout de 60 segundos para archivos de medios
   return await invoke('storeMediaFile', {
     filename: filename,
     data: data
-  });
+  }, 60000);
 }
 
 /**

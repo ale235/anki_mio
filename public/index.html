@@ -230,7 +230,7 @@
 <body>
     <div class="container">
         <h1>🎴 Generador de Tarjetas Anki</h1>
-        <p class="subtitle">Sube una imagen y genera tarjetas automáticamente</p>
+        <p class="subtitle">Sube una imagen, pégala con Ctrl+V, o arrástrala aquí</p>
 
         <div id="statusIndicator" class="status-indicator disconnected">
             <div class="status-dot red"></div>
@@ -240,9 +240,10 @@
         <form id="uploadForm">
             <div class="upload-area" id="uploadArea">
                 <div class="upload-icon">📷</div>
-                <p><strong>Haz clic o arrastra una imagen aquí</strong></p>
+                <p><strong>Haz clic, arrastra una imagen, o presiona Ctrl+V</strong></p>
                 <p style="font-size: 12px; color: #666; margin-top: 8px;">
-                    Formatos: JPG, PNG, GIF, BMP
+                    Formatos: JPG, PNG, GIF, BMP<br>
+                    💡 Tip: Puedes pegar imágenes directamente desde el portapapeles
                 </p>
                 <input type="file" id="imageInput" accept="image/*" style="display: none;">
             </div>
@@ -261,6 +262,17 @@
                 <label for="useOCR" style="margin-bottom: 0;">
                     Usar OCR para extraer texto automáticamente
                 </label>
+            </div>
+
+            <div id="ocrLanguageGroup" class="form-group">
+                <label for="ocrLanguage">Idioma del texto en la imagen:</label>
+                <select id="ocrLanguage">
+                    <option value="eng">🇬🇧 Inglés</option>
+                    <option value="jpn">🇯🇵 Japonés</option>
+                </select>
+                <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                    El sistema traducirá automáticamente al español
+                </p>
             </div>
 
             <div id="manualFields" class="manual-fields hidden">
@@ -291,4 +303,3 @@
     <script src="app.js"></script>
 </body>
 </html>
-

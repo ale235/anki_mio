@@ -4,6 +4,8 @@ const imagePreview = document.getElementById('imagePreview');
 const uploadForm = document.getElementById('uploadForm');
 const deckSelect = document.getElementById('deckSelect');
 const useOCRCheckbox = document.getElementById('useOCR');
+const ocrLanguageGroup = document.getElementById('ocrLanguageGroup');
+const ocrLanguageSelect = document.getElementById('ocrLanguage');
 const manualFields = document.getElementById('manualFields');
 const submitBtn = document.getElementById('submitBtn');
 const message = document.getElementById('message');
@@ -42,12 +44,73 @@ uploadArea.addEventListener('drop', (e) => {
     handleFile(e.dataTransfer.files[0]);
 });
 
+// ===== NUEVA FUNCIONALIDAD: Pegar desde portapapeles =====
+// Detectar pegado en toda la página
+document.addEventListener('paste', async (e) => {
+    e.preventDefault();
+
+    const items = e.clipboardData.items;
+
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+            const blob = items[i].getAsFile();
+
+            if (blob) {
+                // Mostrar indicación visual
+                uploadArea.style.borderColor = '#28a745';
+                uploadArea.style.background = '#e8f5e9';
+
+                setTimeout(() => {
+                    uploadArea.style.borderColor = '';
+                    uploadArea.style.background = '';
+                }, 500);
+
+                // Crear un archivo a partir del blob
+                const file = new File([blob], `pasted-image-${Date.now()}.png`, {
+                    type: blob.type
+                });
+
+                handleFile(file);
+                showMessage('✅ Imagen pegada desde el portapapeles', 'success');
+                break;
+            }
+        }
+    }
+});
+
+// Mostrar hint visual cuando el usuario enfoca la ventana
+let pasteHintTimeout;
+window.addEventListener('focus', () => {
+    clearTimeout(pasteHintTimeout);
+    pasteHintTimeout = setTimeout(() => {
+        if (!selectedFile) {
+            uploadArea.style.animation = 'pulse 0.5s ease-in-out';
+            setTimeout(() => {
+                uploadArea.style.animation = '';
+            }, 500);
+        }
+    }, 100);
+});
+
+// Agregar animación CSS para el hint visual
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+    }
+`;
+document.head.appendChild(style);
+// ===== FIN NUEVA FUNCIONALIDAD =====
+
 // Toggle entre OCR y manual
 useOCRCheckbox.addEventListener('change', () => {
     if (useOCRCheckbox.checked) {
         manualFields.classList.add('hidden');
+        ocrLanguageGroup.style.display = 'block';
     } else {
         manualFields.classList.remove('hidden');
+        ocrLanguageGroup.style.display = 'none';
     }
 });
 
@@ -90,7 +153,10 @@ uploadForm.addEventListener('submit', async (e) => {
     formData.append('deckName', deckName);
     formData.append('useOCR', useOCRCheckbox.checked);
 
-    if (!useOCRCheckbox.checked) {
+    if (useOCRCheckbox.checked) {
+        // Agregar idioma seleccionado para OCR
+        formData.append('ocrLanguage', ocrLanguageSelect.value);
+    } else {
         const front = document.getElementById('frontInput').value;
         const back = document.getElementById('backInput').value;
 
@@ -199,4 +265,3 @@ function resetForm() {
     document.getElementById('backInput').value = '';
     submitBtn.disabled = true;
 }
-

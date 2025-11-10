@@ -7,6 +7,7 @@ require('dotenv').config();
 
 const ankiService = require('./services/ankiService');
 const ocrService = require('./services/ocrService');
+const imageService = require('./services/imageService');
 
 const app = express();
 const PORT = process.env.PORT || 3003;
@@ -55,16 +56,17 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
     const imagePath = req.file.path;
     const deckName = req.body.deckName || 'Default';
     const generateFromOCR = req.body.useOCR === 'true';
+    const ocrLanguage = req.body.ocrLanguage || 'eng'; // 'jpn' o 'eng'
 
     let front, back;
 
     if (generateFromOCR) {
       // Extraer texto de la imagen con OCR
-      console.log('Procesando imagen con OCR...');
-      const extractedText = await ocrService.extractText(imagePath);
+      console.log(`Procesando imagen con OCR (idioma: ${ocrLanguage})...`);
+      const extractedText = await ocrService.extractText(imagePath, ocrLanguage);
 
-      // Generar pregunta y respuesta del texto extraído
-      const cardData = ocrService.generateCardFromText(extractedText);
+      // Generar pregunta y respuesta del texto extraído con traducción
+      const cardData = await ocrService.generateCardFromText(extractedText, ocrLanguage);
       front = cardData.front;
       back = cardData.back;
     } else {
@@ -73,13 +75,14 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
       back = req.body.back || 'Respuesta';
     }
 
-    // Leer imagen y convertir a base64
-    const imageBuffer = fs.readFileSync(imagePath);
-    const base64Image = imageBuffer.toString('base64');
+    // Optimizar imagen antes de enviar a Anki
+    console.log('Optimizando imagen...');
+    const optimizedImageBuffer = await imageService.optimizeImage(imagePath);
+    const base64Image = optimizedImageBuffer.toString('base64');
     const imageFilename = `anki_${Date.now()}${path.extname(req.file.originalname)}`;
 
     console.log('Guardando imagen en Anki...');
-    // Primero guardar la imagen en Anki
+    // Guardar la imagen optimizada en Anki
     await ankiService.storeMediaFile(imageFilename, base64Image);
 
     // Crear el HTML con referencia a la imagen guardada
